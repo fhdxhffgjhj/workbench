@@ -428,8 +428,19 @@ body {
 .lock-error { font-size: 13px; color: var(--red); margin-top: 12px; min-height: 20px; }
 .lock-hint { font-size: 12px; color: var(--text-faint); margin-top: 16px; }
 </style>
+<meta name="theme-color" content="#0d0a1a">
 </head>
 <body>
+<div id="pw-gate" style="position:fixed;inset:0;z-index:2147483647;background:linear-gradient(135deg,#0d0a1a,#181230);display:flex;align-items:center;justify-content:center;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;">
+  <div style="text-align:center;padding:24px;max-width:320px;width:100%;">
+    <div style="font-size:46px;margin-bottom:14px;">🔒</div>
+    <div style="color:#f0eef8;font-size:19px;font-weight:600;margin-bottom:6px;">个人工作台</div>
+    <div style="color:#a098c0;font-size:13px;margin-bottom:22px;">请输入访问密码</div>
+    <input id="pw-input" type="password" inputmode="text" placeholder="密码" autocomplete="off" style="width:100%;padding:13px 16px;font-size:16px;border-radius:12px;border:1px solid #352858;background:#221840;color:#f0eef8;outline:none;box-sizing:border-box;">
+    <button id="pw-btn" style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#6c8eef,#f472b6);color:#fff;font-size:16px;font-weight:600;cursor:pointer;">进入工作台</button>
+    <div id="pw-err" style="color:#f87171;font-size:13px;height:18px;margin-top:12px;"></div>
+  </div>
+</div>
 
 <!-- ===== 密码锁界面 ===== -->
 <div class="lock-screen" id="lockScreen">
@@ -1809,5 +1820,17 @@ function unlockApp() {
 initLock();
 </script>
 
+<script>
+(function(){
+  var HASH="211fe040809258a3516bfe6cbb34f8e1230c4672007ae3985d85097c26d0c9ba";
+  var FB="d2I4ODg4";
+  function tohex(buf){return buf.then(function(r){var f="";var u=new Uint8Array(r);for(var i=0;i<u.length;i++){var x=u[i].toString(16);f+=x.length<2?"0"+x:x;}return f;});}
+  function sha(s){return tohex(crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)));}
+  function openit(){var v=document.getElementById("pw-input").value;if(!v)return;var ok=function(g){if(g){var e=document.getElementById("pw-gate");if(e)e.parentNode.removeChild(e);}else{document.getElementById("pw-err").textContent="密码错误，请重试";}};if(window.crypto&&crypto.subtle){sha(v).then(function(h){ok(h===HASH);});}else{ok(btoa(unescape(encodeURIComponent(v)))===FB);}}
+  document.getElementById("pw-btn").addEventListener("click",openit);
+  document.getElementById("pw-input").addEventListener("keydown",function(e){if(e.key==="Enter")openit();});
+  setTimeout(function(){var i=document.getElementById("pw-input");if(i)i.focus();},100);
+})();
+</script>
 </body>
 </html>
