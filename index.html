@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>个人工作台 | 作战指挥中心</title>
+<style>
+:root {
+  --bg: #0d0a1a;
+  --surface: #181230;
+  --surface2: #221840;
+  --surface3: #2d2150;
+  --border: #352858;
+  --text: #f0eef8;
+  --text-dim: #a098c0;
+  --text-faint: #6b6490;
+  --blue: #6c8eef;
+  --blue-bg: rgba(108,142,239,0.15);
+  --pink: #f472b6;
+  --pink-bg: rgba(244,114,182,0.15);
+  --purple: #c084fc;
+  --purple-bg: rgba(192,132,252,0.15);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.15);
+  --orange: #fb923c;
+  --orange-bg: rgba(251,146,60,0.15);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.15);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.15);
+  --cyan: #22d3ee;
+  --cyan-bg: rgba(34,211,238,0.15);
+  --accent-grad: linear-gradient(135deg, #6c8eef, #f472b6);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 顶部 ===== */
+.header {
+  background: linear-gradient(135deg, #2a1850 0%, #1a1033 50%, #0d0a1a 100%);
+  padding: 20px 16px 16px;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.date-block .weekday { font-size: 13px; color: var(--pink); margin-bottom: 2px; font-weight: 600; }
+.date-block .date {
+  font-size: 26px; font-weight: 800; letter-spacing: 0.5px;
+  background: var(--accent-grad);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.date-block .lunar { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+.countdown-block { text-align: right; }
+.countdown-block .label { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+.countdown-block .days { font-size: 28px; font-weight: 800; color: var(--pink); line-height: 1; }
+.countdown-block .target { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+.overall-progress {
+  background: var(--surface2); border-radius: 10px;
+  padding: 10px 14px; border: 1px solid var(--border);
+}
+.overall-progress .op-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.overall-progress .op-header .pct { color: var(--green); font-weight: 700; }
+.progress-bar { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 3px; background: var(--accent-grad); transition: width 0.4s ease; }
+
+/* ===== Tab ===== */
+.tabs {
+  display: flex; gap: 0; padding: 0 16px;
+  border-bottom: 1px solid var(--border); background: var(--bg);
+  position: sticky; top: 97px; z-index: 99;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 12px 12px; font-size: 14px; color: var(--text-dim);
+  white-space: nowrap; border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s; font-weight: 500;
+}
+.tab.active { color: var(--blue); border-bottom-color: var(--pink); font-weight: 600; }
+
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+
+/* ===== 分类卡片 ===== */
+.category { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+.category-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; }
+.category-header .cat-left { display: flex; align-items: center; gap: 10px; }
+.category-header .cat-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.category-header .cat-name { font-size: 16px; font-weight: 700; }
+.category-header .cat-count { font-size: 12px; color: var(--text-dim); margin-left: 6px; }
+.category-header .cat-right { display: flex; align-items: center; gap: 10px; }
+.cat-mini-progress { width: 50px; height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+.cat-mini-progress .fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.cat-toggle { color: var(--text-faint); font-size: 12px; transition: transform 0.2s; }
+.category.expanded .cat-toggle { transform: rotate(90deg); }
+.category-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.category.expanded .category-body { max-height: 2000px; }
+
+/* 快捷跳转入口 */
+.quick-links {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 10px 16px 4px; border-top: 1px solid var(--border);
+}
+.quick-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 16px;
+  font-size: 12px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim);
+}
+.quick-link:active { opacity: 0.7; }
+
+/* ===== 任务项 ===== */
+.task-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.task-checkbox {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 2px solid var(--text-faint); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; margin-top: 1px;
+}
+.task-checkbox.checked { background: var(--accent-grad); border-color: transparent; }
+.task-checkbox.checked::after { content: "✓"; color: #fff; font-size: 14px; font-weight: 800; }
+.task-content { flex: 1; min-width: 0; }
+.task-name { font-size: 14px; color: var(--text); margin-bottom: 2px; }
+.task-item.done .task-name { text-decoration: line-through; color: var(--text-faint); }
+.task-meta { font-size: 11px; color: var(--text-faint); }
+.task-note { margin-top: 6px; font-size: 12px; color: var(--text-dim); background: var(--surface2); border-radius: 6px; padding: 6px 8px; display: none; }
+.task-note.show { display: block; }
+.task-note-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 12px;
+  margin-top: 6px; display: none; font-family: inherit; outline: none;
+}
+.task-note-input.show { display: block; }
+.task-note-input:focus { border-color: var(--pink); }
+.task-actions { display: flex; gap: 8px; margin-top: 4px; }
+.task-action-btn { font-size: 11px; color: var(--text-dim); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.task-action-btn:active { background: var(--surface3); }
+.add-task-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text-dim); cursor: pointer;
+}
+.add-task-btn:active { background: var(--surface2); }
+.add-task-form { display: none; padding: 10px 16px; border-top: 1px solid var(--border); }
+.add-task-form.show { display: block; }
+.add-task-form input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px;
+  outline: none; font-family: inherit;
+}
+.add-task-form input:focus { border-color: var(--pink); }
+.add-task-form .form-actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn { padding: 6px 16px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+.btn-primary { background: var(--accent-grad); color: #fff; }
+.btn-cancel { background: var(--surface3); color: var(--text-dim); }
+
+/* ===== 统计 ===== */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+.stat-card .stat-value { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+.stat-card .stat-label { font-size: 12px; color: var(--text-dim); }
+.stat-card.streak .stat-value { color: var(--pink); }
+.stat-card.rate .stat-value { color: var(--green); }
+
+.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.weekly-bars { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; gap: 6px; }
+.weekly-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.weekly-bar { width: 100%; max-width: 28px; background: var(--surface3); border-radius: 4px 4px 0 0; min-height: 4px; position: relative; transition: height 0.3s; }
+.weekly-bar .bar-fill { position: absolute; bottom: 0; left: 0; right: 0; background: var(--accent-grad); border-radius: 4px 4px 0 0; transition: height 0.3s; }
+.weekly-bar-item .day-label { font-size: 10px; color: var(--text-faint); }
+.weekly-bar-item.today .day-label { color: var(--pink); font-weight: 700; }
+
+.cat-stats { display: flex; flex-direction: column; gap: 12px; }
+.cat-stat-row { display: flex; align-items: center; gap: 10px; }
+.cat-stat-row .cat-icon-sm { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.cat-stat-row .cat-info { flex: 1; }
+.cat-stat-row .cat-info .name { font-size: 13px; margin-bottom: 4px; }
+.cat-stat-row .cat-info .bar { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.cat-stat-row .cat-info .bar .fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.cat-stat-row .pct { font-size: 13px; font-weight: 700; min-width: 36px; text-align: right; }
+
+/* ===== 求职 ===== */
+.job-project { margin-bottom: 16px; }
+.job-project:last-child { margin-bottom: 0; }
+.job-project-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.job-project-header .jp-name { font-size: 14px; font-weight: 600; }
+.job-project-header .jp-pct { font-size: 13px; font-weight: 700; }
+.job-project .bar { height: 8px; background: var(--surface3); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.job-project .bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.job-project .jp-desc { font-size: 12px; color: var(--text-dim); }
+
+.job-app-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.job-app-item .ja-left .ja-company { font-size: 14px; font-weight: 600; }
+.job-app-item .ja-left .ja-role { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.job-app-item .ja-status { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.ja-status.pending { background: var(--yellow-bg); color: var(--yellow); }
+.ja-status.interview { background: var(--blue-bg); color: var(--blue); }
+.ja-status.offer { background: var(--green-bg); color: var(--green); }
+.ja-status.rejected { background: var(--red-bg); color: var(--red); }
+
+.decision-timeline { margin-top: 8px; }
+.decision-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+.decision-item:last-child { padding-bottom: 0; }
+.decision-item::before { content: ""; position: absolute; left: 7px; top: 20px; bottom: 0; width: 2px; background: var(--border); }
+.decision-item:last-child::before { display: none; }
+.decision-dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--surface3); flex-shrink: 0; margin-top: 2px; z-index: 1; }
+.decision-dot.done { border-color: var(--green); background: var(--green); }
+.decision-dot.current { border-color: var(--pink); background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+.decision-content .dc-time { font-size: 11px; color: var(--text-faint); margin-bottom: 2px; }
+.decision-content .dc-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.decision-content .dc-desc { font-size: 12px; color: var(--text-dim); }
+
+/* ===== 日报/周报 ===== */
+.report-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.report-header .rh-title { font-size: 15px; font-weight: 700; }
+.report-header .rh-date { font-size: 12px; color: var(--text-dim); }
+.report-section { margin-bottom: 14px; }
+.report-section:last-child { margin-bottom: 0; }
+.report-section label { display: block; font-size: 13px; color: var(--pink); margin-bottom: 6px; font-weight: 600; }
+.report-section textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px;
+  outline: none; font-family: inherit; resize: vertical; min-height: 60px; line-height: 1.6;
+}
+.report-section textarea:focus { border-color: var(--pink); }
+.report-saved { font-size: 12px; color: var(--green); margin-top: 8px; display: none; }
+.report-saved.show { display: block; }
+
+.report-history-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.report-history-item .rhi-date { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+.report-history-item .rhi-content { font-size: 12px; color: var(--text-dim); white-space: pre-wrap; }
+.report-history-item .rhi-stats { display: flex; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; }
+.report-history-item .rhi-stats span { color: var(--text-faint); }
+.report-history-item .rhi-stats strong { color: var(--pink); }
+
+.weekly-summary { background: var(--surface2); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.weekly-summary .ws-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+.weekly-summary .ws-row .ws-label { color: var(--text-dim); }
+.weekly-summary .ws-row .ws-value { font-weight: 700; color: var(--pink); }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-faint); font-size: 14px; }
+/* ===== 记账 ===== */
+.finance-total {
+  background: linear-gradient(135deg, #2a1850, #1a1033);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 16px; margin-bottom: 16px; text-align: center;
+}
+.finance-total .ft-label { font-size: 12px; color: var(--text-dim); }
+.finance-total .ft-value { font-size: 36px; font-weight: 800; background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 4px 0; }
+.finance-total .ft-sub { font-size: 12px; color: var(--text-faint); }
+
+.asset-donut-wrap { display: flex; align-items: center; gap: 20px; padding: 8px 0; }
+.asset-donut {
+  width: 130px; height: 130px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.asset-donut .hole {
+  width: 92px; height: 92px; border-radius: 50%; background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.asset-donut .hole .h-label { font-size: 10px; color: var(--text-faint); }
+.asset-donut .hole .h-value { font-size: 15px; font-weight: 800; }
+.asset-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.asset-item { display: flex; align-items: center; gap: 8px; }
+.asset-item .dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.asset-item input {
+  width: 100px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; color: var(--text); font-size: 13px;
+  outline: none; font-family: inherit; text-align: right;
+}
+.asset-item input:focus { border-color: var(--pink); }
+.asset-item .a-name { font-size: 13px; flex: 1; }
+
+.month-chart {
+  display: flex; justify-content: space-around; align-items: flex-end;
+  height: 130px; gap: 8px; padding: 10px 4px 0;
+}
+.month-group { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.month-bars { display: flex; gap: 4px; align-items: flex-end; height: 100px; }
+.m-bar { width: 16px; border-radius: 3px 3px 0 0; min-height: 3px; position: relative; }
+.m-bar.income { background: linear-gradient(180deg, #4ade80, #22c55e); }
+.m-bar.expense { background: linear-gradient(180deg, #f472b6, #ec4899); }
+.m-bar .m-val {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; color: var(--text-dim); white-space: nowrap;
+}
+.month-group .m-label { font-size: 10px; color: var(--text-faint); }
+
+.month-list-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--border);
+}
+.month-list-item .ml-month { font-size: 14px; font-weight: 700; color: var(--blue); }
+.month-list-item .ml-detail { display: flex; gap: 12px; font-size: 12px; }
+.month-list-item .ml-detail span { color: var(--text-faint); }
+.month-list-item .ml-detail strong { font-weight: 700; }
+.month-list-item .ml-del { color: var(--red); cursor: pointer; font-size: 13px; padding: 2px 6px; }
+
+.finance-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+.fs-cell { background: var(--surface2); border-radius: 10px; padding: 10px; text-align: center; }
+.fs-cell .fs-val { font-size: 16px; font-weight: 800; }
+.fs-cell .fs-label { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+/* ===== 资讯 ===== */
+.news-group-title {
+  font-size: 14px; font-weight: 700; margin: 16px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.news-group-title:first-child { margin-top: 0; }
+.news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.news-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 12px; text-decoration: none;
+  display: flex; flex-direction: column; gap: 4px; color: var(--text);
+  transition: all 0.2s;
+}
+.news-card:active { background: var(--surface2); border-color: var(--pink); }
+.news-card .nc-icon { font-size: 22px; }
+.news-card .nc-name { font-size: 14px; font-weight: 700; }
+.news-card .nc-desc { font-size: 11px; color: var(--text-faint); line-height: 1.4; }
+.news-card .nc-go { font-size: 11px; color: var(--pink); font-weight: 600; margin-top: 2px; }
+
+/* ===== FAB ===== */
+.fab {
+  position: fixed; bottom: 72px; right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent-grad); color: #fff; font-size: 24px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(244,114,182,0.4); z-index: 150;
+  transition: transform 0.2s;
+}
+.fab:active { transform: scale(0.92); }
+
+/* ===== 底部导航 ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; z-index: 100; backdrop-filter: blur(20px);
+}
+.nav-item { flex: 1; padding: 10px 0 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.nav-item .nav-icon { font-size: 20px; margin-bottom: 2px; }
+.nav-item .nav-label { font-size: 10px; color: var(--text-faint); }
+.nav-item.active .nav-icon { transform: scale(1.1); }
+.nav-item.active .nav-label { color: var(--pink); font-weight: 600; }
+
+/* ===== 弹窗 ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,5,20,0.7);
+  z-index: 300; display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); width: 100%; max-width: 500px;
+  border-radius: 20px 20px 0 0; padding: 20px; padding-bottom: 30px;
+  max-height: 80vh; overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-header h3 { font-size: 17px; }
+.modal-close {
+  background: var(--surface3); border: none; color: var(--text-dim);
+  width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer;
+}
+.modal label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; margin-top: 12px; }
+.modal input, .modal select, .modal textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px;
+  outline: none; font-family: inherit;
+}
+.modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--pink); }
+.modal .btn { width: 100%; margin-top: 16px; padding: 12px; }
+
+.toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface3); color: var(--text);
+  padding: 10px 20px; border-radius: 20px; font-size: 13px;
+  z-index: 300; opacity: 0; transition: all 0.3s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== 密码锁 ===== */
+.lock-screen {
+  position: fixed; inset: 0; z-index: 500;
+  background: linear-gradient(135deg, #2a1850, #1a1033 50%, #0d0a1a);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; padding: 30px;
+}
+.lock-screen.hidden { display: none; }
+.lock-card {
+  width: 100%; max-width: 320px; text-align: center;
+}
+.lock-card .lock-icon { font-size: 48px; margin-bottom: 16px; }
+.lock-card h2 { font-size: 20px; margin-bottom: 8px; }
+.lock-card .lock-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
+.lock-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; color: var(--text); font-size: 18px;
+  outline: none; font-family: inherit; text-align: center; letter-spacing: 4px;
+}
+.lock-input:focus { border-color: var(--pink); }
+.lock-btn {
+  width: 100%; margin-top: 16px; padding: 14px;
+  border-radius: 10px; border: none; cursor: pointer;
+  background: var(--accent-grad); color: #fff; font-size: 16px; font-weight: 700;
+  font-family: inherit;
+}
+.lock-btn:active { opacity: 0.85; }
+.lock-error { font-size: 13px; color: var(--red); margin-top: 12px; min-height: 20px; }
+.lock-hint { font-size: 12px; color: var(--text-faint); margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ===== 密码锁界面 ===== -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h2 id="lockTitle">请输入访问密码</h2>
+    <div class="lock-desc" id="lockDesc">个人工作台 · 请验证身份</div>
+    <input class="lock-input" type="password" id="lockPassword" placeholder="输入密码"
+      onkeypress="if(event.key==='Enter')checkLock()">
+    <button class="lock-btn" onclick="checkLock()" id="lockBtn">进入工作台</button>
+    <div class="lock-error" id="lockError"></div>
+    <div class="lock-hint" id="lockHint"></div>
+  </div>
+</div>
+<!-- ===== 顶部 ===== -->
+<div class="header">
+  <div class="header-top">
+    <div class="date-block">
+      <div class="weekday" id="weekday">周六</div>
+      <div class="date" id="dateStr">8月16日</div>
+      <div class="lunar" id="weekInfo">第0周 / 共16周</div>
+    </div>
+    <div class="countdown-block">
+      <div class="label">距教资面试</div>
+      <div class="days" id="countdown">--</div>
+      <div class="target">12月5日</div>
+    </div>
+  </div>
+  <div class="overall-progress">
+    <div class="op-header">
+      <span>今日完成</span>
+      <span class="pct" id="todayPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="fill" id="todayFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ===== Tab ===== -->
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="today">📋 今日</div>
+  <div class="tab" data-tab="report">📝 日报</div>
+  <div class="tab" data-tab="stats">📊 统计</div>
+  <div class="tab" data-tab="finance">💰 记账</div>
+  <div class="tab" data-tab="news">📰 资讯</div>
+  <div class="tab" data-tab="job">🎯 求职</div>
+</div>
+
+<!-- ===== 今日面板 ===== -->
+<div class="tab-content active" id="tab-today">
+  <div id="categoriesContainer"></div>
+</div>
+
+<!-- ===== 日报/周报面板 ===== -->
+<div class="tab-content" id="tab-report">
+  <div class="report-card">
+    <div class="report-header">
+      <span class="rh-title">✍️ 今日工作日报</span>
+      <span class="rh-date" id="reportDate">--</span>
+    </div>
+    <div class="report-section">
+      <label>📌 今日完成的工作</label>
+      <textarea id="dailyDone" placeholder="今天做了哪些工作？完成了哪些任务？" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>💡 今日学到了什么</label>
+      <textarea id="dailyLearn" placeholder="今天有什么收获？学到了什么新知识/技能？" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>🔥 工作提效记录（用于转正/跳槽素材）</label>
+      <textarea id="dailyEfficiency" placeholder="今天用技术/方法优化了什么？省了多少时间？量化记录" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>📖 读书记录（书名/时长/收获）</label>
+      <textarea id="dailyReading" placeholder="今天读了什么书？读了多久？有什么收获？" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>📋 明日计划</label>
+      <textarea id="dailyPlan" placeholder="明天要做什么？" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>🤔 反思与改进</label>
+      <textarea id="dailyReflect" placeholder="今天有什么做得不好的？怎么改进？" onblur="saveDailyReport()"></textarea>
+    </div>
+    <div class="report-saved" id="dailySaved">✅ 已自动保存</div>
+  </div>
+
+  <div class="report-card">
+    <div class="report-header"><span class="rh-title">📅 本周日报记录</span></div>
+    <div id="dailyHistory"></div>
+  </div>
+
+  <div class="report-card">
+    <div class="report-header">
+      <span class="rh-title">📊 本周周报</span>
+      <span class="rh-date" id="weekReportDate">--</span>
+    </div>
+    <div class="weekly-summary" id="weeklySummary"></div>
+    <div class="report-section">
+      <label>🎯 本周核心成果</label>
+      <textarea id="weeklyAchievement" placeholder="本周最大的成果是什么？" onblur="saveWeeklyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>📈 项目进展</label>
+      <textarea id="weeklyProject" placeholder="项目推进了哪些？进度如何？" onblur="saveWeeklyReport()"></textarea>
+    </div>
+    <div class="report-section">
+      <label>🔍 下周重点计划</label>
+      <textarea id="weeklyPlan" placeholder="下周最重要的3件事？" onblur="saveWeeklyReport()"></textarea>
+    </div>
+    <div class="report-saved" id="weeklySaved">✅ 已自动保存</div>
+  </div>
+</div>
+
+<!-- ===== 统计面板 ===== -->
+<div class="tab-content" id="tab-stats">
+  <div class="stats-grid">
+    <div class="stat-card streak">
+      <div class="stat-value" id="streakDays">0</div>
+      <div class="stat-label">连续打卡天数</div>
+    </div>
+    <div class="stat-card rate">
+      <div class="stat-value" id="weekRate">0%</div>
+      <div class="stat-label">本周完成率</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📈 本周每日完成率</div>
+    <div class="weekly-bars" id="weeklyBars"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📊 各分类完成率</div>
+    <div class="cat-stats" id="catStats"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🗓️ 16周进度</div>
+    <div class="progress-bar" style="height:10px;margin-bottom:8px;">
+      <div class="fill" id="overallProgress" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);">
+      <span>第 <span id="currentWeek">1</span> 周</span>
+      <span id="weekRange">8/17 - 9/13</span>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📊 累计数据（可用于转正/跳槽）</div>
+    <div id="totalStats"></div>
+  </div>
+</div>
+<!-- ===== 记账面板 ===== -->
+<div class="tab-content" id="tab-finance">
+  <div class="finance-total">
+    <div class="ft-label">💰 总资产</div>
+    <div class="ft-value" id="totalAsset">¥0</div>
+    <div class="ft-sub">微信 + 支付宝 + 银行卡</div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">👛 账户资产分布</div>
+    <div class="asset-donut-wrap">
+      <div class="asset-donut" id="assetDonut">
+        <div class="hole">
+          <div class="h-label">资产</div>
+          <div class="h-value" id="donutCenter">¥0</div>
+        </div>
+      </div>
+      <div class="asset-legend">
+        <div class="asset-item">
+          <span class="dot" style="background:#6c8eef;"></span>
+          <span class="a-name">💬 微信</span>
+          <input type="number" id="assetWechat" placeholder="0" oninput="saveAssets()">
+        </div>
+        <div class="asset-item">
+          <span class="dot" style="background:#f472b6;"></span>
+          <span class="a-name">🅰️ 支付宝</span>
+          <input type="number" id="assetAlipay" placeholder="0" oninput="saveAssets()">
+        </div>
+        <div class="asset-item">
+          <span class="dot" style="background:#4ade80;"></span>
+          <span class="a-name">🏦 银行卡</span>
+          <input type="number" id="assetBank" placeholder="0" oninput="saveAssets()">
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">💡 直接输入各账户余额，自动计算占比</div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📉 每月收支趋势 <span style="font-size:11px;color:var(--text-faint);font-weight:400;">（点下方按钮添加）</span></div>
+    <div id="monthChartWrap"></div>
+    <div class="finance-summary" id="financeSummary"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="openModal('addMonthModal')">+ 添加月度收支</button>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📋 每月收支明细</div>
+    <div id="monthList"></div>
+  </div>
+</div>
+
+<!-- ===== 资讯面板 ===== -->
+<div class="tab-content" id="tab-news">
+  <div class="news-group-title">🤖 AI 前沿资讯</div>
+  <div class="news-grid">
+    <a class="news-card" href=" " target="_blank">
+      <div class="nc-icon">🧠</div>
+      <div class="nc-name">机器之心</div>
+      <div class="nc-desc">国内最专业的AI媒体，深度技术报道</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://www.qbitai.com/" target="_blank">
+      <div class="nc-icon">⚛️</div>
+      <div class="nc-name">量子位</div>
+      <div class="nc-desc">AI前沿动态，通俗易懂</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://news.ycombinator.com/" target="_blank">
+      <div class="nc-icon">🔥</div>
+      <div class="nc-name">Hacker News</div>
+      <div class="nc-desc">全球程序员/创业圈最热话题</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://www.deeplearning.ai/the-batch/" target="_blank">
+      <div class="nc-icon">📮</div>
+      <div class="nc-name">The Batch</div>
+      <div class="nc-desc">吴恩达周报，AI趋势风向标</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+  </div>
+
+  <div class="news-group-title">🛠️ AI 技能与学习</div>
+  <div class="news-grid">
+    <a class="news-card" href="https://github.com/trending" target="_blank">
+      <div class="nc-icon">🐙</div>
+      <div class="nc-name">GitHub Trending</div>
+      <div class="nc-desc">全球最热门开源项目，技术风向</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://huggingface.co/" target="_blank">
+      <div class="nc-icon">🤗</div>
+      <div class="nc-name">Hugging Face</div>
+      <div class="nc-desc">AI模型社区，看最新模型发布</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://www.bilibili.com/" target="_blank">
+      <div class="nc-icon">📺</div>
+      <div class="nc-name">B站</div>
+      <div class="nc-desc">技术教程视频学习</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+  </div>
+
+  <div class="news-group-title">💹 金融资讯</div>
+  <div class="news-grid">
+    <a class="news-card" href="https://wallstreetcn.com/" target="_blank">
+      <div class="nc-icon">🏛️</div>
+      <div class="nc-name">华尔街见闻</div>
+      <div class="nc-desc">全球金融市场快讯</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://xueqiu.com/" target="_blank">
+      <div class="nc-icon">❄️</div>
+      <div class="nc-name">雪球</div>
+      <div class="nc-desc">投资交流，行情讨论</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://www.caixin.com/" target="_blank">
+      <div class="nc-icon">📰</div>
+      <div class="nc-name">财新网</div>
+      <div class="nc-desc">深度财经调查报道</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+    <a class="news-card" href="https://www.eastmoney.com/" target="_blank">
+      <div class="nc-icon">📊</div>
+      <div class="nc-name">东方财富</div>
+      <div class="nc-desc">行情数据，基金股票</div>
+      <div class="nc-go">前往 →</div>
+    </a >
+  </div>
+
+  <div style="margin-top:20px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--text-faint);line-height:1.7;">
+    💡 建议每天固定10分钟：先扫AI资讯（趋势+技能），再看金融资讯（理财意识）。坚持3个月，你对AI行业的判断力会明显提升。
+  </div>
+</div>
+
+<!-- ===== 求职面板 ===== -->
+<div class="tab-content" id="tab-job">
+  <div class="section-card">
+    <div class="section-title">🤖 项目进度</div>
+    <div id="projectsContainer"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📋 投递记录</div>
+    <div id="applicationsContainer"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="openModal('addAppModal')">+ 添加投递记录</button>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🗺️ 决策节点</div>
+    <div class="decision-timeline" id="decisionTimeline"></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn">+</button>
+
+<!-- 添加任务弹窗 -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>添加任务</h3>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">×</button>
+    </div>
+    <label>任务名称</label>
+    <input type="text" id="newTaskName" placeholder="如：完成项目1模块A">
+    <label>分类</label>
+    <select id="newTaskCategory">
+      <option value="work">💼 工作</option>
+      <option value="study">📚 学习</option>
+      <option value="reading">📖 读书</option>
+      <option value="diet">🥗 饮食</option>
+      <option value="exercise">💪 运动</option>
+    </select>
+    <label>备注（可选）</label>
+    <input type="text" id="newTaskNote" placeholder="如：预计2小时">
+    <button class="btn btn-primary" onclick="addTaskFromModal()">添加任务</button>
+  </div>
+</div>
+
+<!-- 添加投递弹窗 -->
+<div class="modal-overlay" id="addAppModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>添加投递记录</h3>
+      <button class="modal-close" onclick="closeModal('addAppModal')">×</button>
+    </div>
+    <label>公司名称</label>
+    <input type="text" id="newAppCompany" placeholder="如：字节跳动">
+    <label>岗位</label>
+    <input type="text" id="newAppRole" placeholder="如：AI应用开发工程师">
+    <label>状态</label>
+    <select id="newAppStatus">
+      <option value="pending">已投递</option>
+      <option value="interview">面试中</option>
+      <option value="offer">已Offer</option>
+      <option value="rejected">已拒绝</option>
+    </select>
+    <button class="btn btn-primary" onclick="addApplicationFromModal()">添加</button>
+  </div>
+</div>
+
+<!-- 添加月度收支弹窗 -->
+<div class="modal-overlay" id="addMonthModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>添加月度收支</h3>
+      <button class="modal-close" onclick="closeModal('addMonthModal')">×</button>
+    </div>
+    <label>月份</label>
+    <input type="month" id="newMonthVal">
+    <label>收入（元）</label>
+    <input type="number" id="newMonthIncome" placeholder="如：4300">
+    <label>支出（元）</label>
+    <input type="number" id="newMonthExpense" placeholder="如：2500">
+    <div style="font-size:12px;color:var(--text-faint);margin-top:8px;">可存金额 = 收入 - 支出，自动计算</div>
+    <button class="btn btn-primary" onclick="addMonthRecord()">保存</button>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="bottom-nav">
+  <div class="nav-item active" data-tab="today"><div class="nav-icon">📋</div><div class="nav-label">今日</div></div>
+  <div class="nav-item" data-tab="report"><div class="nav-icon">📝</div><div class="nav-label">日报</div></div>
+  <div class="nav-item" data-tab="finance"><div class="nav-icon">💰</div><div class="nav-label">记账</div></div>
+  <div class="nav-item" data-tab="news"><div class="nav-icon">📰</div><div class="nav-label">资讯</div></div>
+  <div class="nav-item" data-tab="job"><div class="nav-icon">🎯</div><div class="nav-label">求职</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ===== 配置 =====
+const START_DATE = '2026-08-17';
+const EXAM_DATE = '2026-12-05';
+const TOTAL_WEEKS = 16;
+
+const CATEGORIES = {
+  work: { name: '工作', icon: '💼', color: '#6c8eef', bg: 'rgba(108,142,239,0.15)' },
+  study: { name: '学习', icon: '📚', color: '#c084fc', bg: 'rgba(192,132,252,0.15)' },
+  reading: { name: '读书', icon: '📖', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)' },
+  diet: { name: '饮食', icon: '🥗', color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+  exercise: { name: '运动', icon: '💪', color: '#fb923c', bg: 'rgba(251,146,60,0.15)' }
+};
+
+const QUICK_LINKS = {
+  study: [
+    { name: '📺 B站', url: 'https://www.bilibili.com/' },
+    { name: '🎧 每日英语听力', url: 'https://listening.dict.cn/' }
+  ],
+  reading: [
+    { name: '📚 微信读书', url: 'https://weread.qq.com/' }
+  ]
+};
+
+const DEFAULT_TASKS = {
+  work: [
+    { name: '转正项目推进', note: '' },
+    { name: '简历投递 / 刷招聘', note: '' },
+    { name: '工作提效记录', note: '记录今天用技术优化了什么' }
+  ],
+  study: [
+    { name: 'AI项目开发', note: '项目1：保险前线AI Agent' },
+    { name: '英语口语+听力', note: '口语30min + 听力20min' },
+    { name: '教资备考', note: '试讲练习 / 结构化' }
+  ],
+  reading: [
+    { name: '读书30分钟', note: '记录在日报-读书栏' }
+  ],
+  diet: [
+    { name: '早餐（抗炎饮食）', note: '' },
+    { name: '午餐（抗炎饮食）', note: '' },
+    { name: '晚餐（抗炎饮食）', note: '' }
+  ],
+  exercise: [
+    { name: '体态训练', note: '前4周：体态矫正训练' }
+  ]
+};
+
+const DEFAULT_PROJECTS = [
+  { id: 'p1', name: '项目1：保险前线 AI Agent', progress: 0, color: '#6c8eef', desc: '暖客话术生成 + 报销数据汇总 + 客户看板 + 产说会自动化' },
+  { id: 'p2', name: '项目2：数据分析/Agent（待定）', progress: 0, color: '#c084fc', desc: '第3个月启动，更硬核的数据/Agent方向项目' },
+  { id: 'p3', name: '作品集页面 + 简历', progress: 0, color: '#4ade80', desc: 'GitHub Pages 作品集 + 简历更新' }
+];
+
+const DEFAULT_APPLICATIONS = [];
+
+const DECISIONS = [
+  { time: '8/17 - 9/13', title: '第1阶段：打基础', desc: '体态+抗炎饮食；项目1开发；英语日常练习' },
+  { time: '9/14 - 10/11', title: '第2阶段：投递+决策', desc: '加无氧塑形；项目1上线+投递简历；国庆前后做跳槽or转正决策' },
+  { time: '10/12 - 11/8', title: '第3阶段：面试/转正', desc: '跳槽面试 or 转正+继续找；教资冲刺启动' },
+  { time: '11/9 - 12/5', title: '第4阶段：教资冲刺', desc: '教资面试最后冲刺；项目2/面试持续' }
+];
+
+// ===== 数据管理 =====
+function getTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getDateStr(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getWeekKey(dateStr) {
+  const start = new Date(START_DATE);
+  const d = new Date(dateStr);
+  const diff = Math.floor((d - start) / (1000*60*60*24));
+  return 'week_' + (Math.floor(diff / 7) + 1);
+}
+function getWeekNumber(dateStr) {
+  const start = new Date(START_DATE);
+  const d = new Date(dateStr);
+  const diff = Math.floor((d - start) / (1000*60*60*24));
+  return Math.floor(diff / 7) + 1;
+}
+
+function loadData() {
+  let data = localStorage.getItem('workbench_data');
+  if (!data) {
+    data = {
+      tasks: {},
+      dailyReports: {},
+      weeklyReports: {},
+      projects: JSON.parse(JSON.stringify(DEFAULT_PROJECTS)),
+      applications: DEFAULT_APPLICATIONS,
+      finance: { assets: { wechat: '', alipay: '', bank: '' }, monthly: [] },
+      streak: 0,
+      lastActiveDate: null,
+      createdAt: getTodayStr()
+    };
+    saveData(data);
+  } else {
+    data = JSON.parse(data);
+    if (!data.tasks) data.tasks = {};
+    if (!data.dailyReports) data.dailyReports = {};
+    if (!data.weeklyReports) data.weeklyReports = {};
+    if (!data.projects) data.projects = JSON.parse(JSON.stringify(DEFAULT_PROJECTS));
+    if (!data.applications) data.applications = [];
+    if (!data.finance) data.finance = { assets: { wechat: '', alipay: '', bank: '' }, monthly: [] };
+    if (!data.finance.assets) data.finance.assets = { wechat: '', alipay: '', bank: '' };
+    if (!data.finance.monthly) data.finance.monthly = [];
+    if (!data.streak) data.streak = 0;
+  }
+  return data;
+}
+
+function saveData(data) {
+  localStorage.setItem('workbench_data', JSON.stringify(data));
+}
+
+function getDayTasks(dateStr) {
+  const data = loadData();
+  if (!data.tasks[dateStr]) {
+    const tasks = {};
+    const weekNum = getWeekNumber(dateStr);
+    for (const cat in DEFAULT_TASKS) {
+      tasks[cat] = DEFAULT_TASKS[cat].map((t, i) => ({
+        id: cat + '_' + i + '_' + dateStr,
+        name: t.name, done: false, note: t.note, fixed: true
+      }));
+    }
+    if (weekNum >= 5) {
+      tasks.exercise.push({
+        id: 'exercise_3_' + dateStr,
+        name: '无氧塑形训练', done: false, note: '第5周起加入', fixed: true
+      });
+    }
+    data.tasks[dateStr] = tasks;
+    saveData(data);
+  }
+  return data.tasks[dateStr];
+}
+
+// ===== 渲染 =====
+function renderHeader() {
+  const now = new Date();
+  const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+  document.getElementById('weekday').textContent = weekdays[now.getDay()];
+  document.getElementById('dateStr').textContent = (now.getMonth()+1) + '月' + now.getDate() + '日';
+  document.getElementById('weekInfo').textContent = '第' + getWeekNumber(getTodayStr()) + '周 / 共' + TOTAL_WEEKS + '周';
+  const exam = new Date(EXAM_DATE);
+  document.getElementById('countdown').textContent = Math.ceil((exam - now) / (1000*60*60*24)) + '天';
+  updateTodayProgress();
+}
+
+function updateTodayProgress() {
+  const todayTasks = getDayTasks(getTodayStr());
+  let total = 0, done = 0;
+  for (const cat in todayTasks) {
+    todayTasks[cat].forEach(t => { total++; if (t.done) done++; });
+  }
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('todayPct').textContent = pct + '%';
+  document.getElementById('todayFill').style.width = pct + '%';
+}
+
+function renderCategories() {
+  const container = document.getElementById('categoriesContainer');
+  const todayTasks = getDayTasks(getTodayStr());
+  container.innerHTML = '';
+  for (const catKey in CATEGORIES) {
+    const cat = CATEGORIES[catKey];
+    const tasks = todayTasks[catKey] || [];
+    const doneCount = tasks.filter(t => t.done).length;
+    const pct = tasks.length > 0 ? Math.round(doneCount / tasks.length * 100) : 0;
+    const links = QUICK_LINKS[catKey] || [];
+    const linksHtml = links.length ? `
+      <div class="quick-links">
+        ${links.map(l => `<a class="quick-link" href=" " target="_blank">${l.name} ↗</a >`).join('')}
+      </div>` : '';
+    const div = document.createElement('div');
+    div.className = 'category expanded';
+    div.innerHTML = `
+      <div class="category-header" onclick="toggleCategory(this)">
+        <div class="cat-left">
+          <div class="cat-icon" style="background:${cat.bg};">${cat.icon}</div>
+          <div><span class="cat-name">${cat.name}</span><span class="cat-count">${doneCount}/${tasks.length}</span></div>
+        </div>
+        <div class="cat-right">
+          <div class="cat-mini-progress"><div class="fill" style="width:${pct}%;background:${cat.color};"></div></div>
+          <span class="cat-toggle">▶</span>
+        </div>
+      </div>
+      <div class="category-body">
+        ${linksHtml}
+        ${tasks.map(t => renderTaskItem(t, catKey)).join('')}
+        <div class="add-task-btn" onclick="showAddTaskForm(this, '${catKey}')"><span>+</span> <span>添加任务</span></div>
+        <div class="add-task-form">
+          <input type="text" placeholder="输入任务名称..." onkeypress="if(event.key==='Enter')addTaskInline(this,'${catKey}')">
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="addTaskInline(this.previousElementSibling,'${catKey}')">添加</button>
+            <button class="btn btn-cancel" onclick="cancelAddTask(this)">取消</button>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function renderTaskItem(task, catKey) {
+  return `
+    <div class="task-item ${task.done ? 'done' : ''}" data-task-id="${task.id}">
+      <div class="task-checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask('${task.id}')"></div>
+      <div class="task-content">
+        <div class="task-name">${task.name}</div>
+        ${task.note ? `<div class="task-meta">${task.note}</div>` : ''}
+        <div class="task-note ${task.userNote ? 'show' : ''}">${task.userNote || ''}</div>
+        <input class="task-note-input" type="text" placeholder="添加备注..." value="${task.userNote || ''}"
+          onblur="saveNote('${task.id}', this.value)" onkeypress="if(event.key==='Enter')this.blur()">
+        <div class="task-actions">
+          <span class="task-action-btn" onclick="showNoteInput('${task.id}')">📝 备注</span>
+          ${!task.fixed ? `<span class="task-action-btn" onclick="deleteTask('${task.id}','${catKey}')" style="color:var(--red);">🗑 删除</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCategory(header) { header.parentElement.classList.toggle('expanded'); }
+
+function toggleTask(taskId) {
+  const data = loadData();
+  const todayTasks = data.tasks[getTodayStr()];
+  for (const cat in todayTasks) {
+    const task = todayTasks[cat].find(t => t.id === taskId);
+    if (task) {
+      task.done = !task.done;
+      saveData(data);
+      updateStreak();
+      renderCategories();
+      renderHeader();
+      if (task.done) showToast('✅ 完成！');
+      return;
+    }
+  }
+}
+
+function updateStreak() {
+  const data = loadData();
+  const today = getTodayStr();
+  const yesterday = getDateStr(-1);
+  const todayTasks = data.tasks[today];
+  if (!todayTasks) return;
+  let allDone = true;
+  for (const cat in todayTasks) {
+    if (todayTasks[cat].some(t => !t.done)) { allDone = false; break; }
+  }
+  if (allDone && data.lastActiveDate !== today) {
+    data.streak = (data.streak || 0) + 1;
+    data.lastActiveDate = today;
+    saveData(data);
+  } else if (!allDone && data.lastActiveDate === today) {
+    data.streak = Math.max(0, (data.streak || 0) - 1);
+    data.lastActiveDate = yesterday;
+    saveData(data);
+  }
+}
+
+function showNoteInput(taskId) {
+  const item = document.querySelector(`[data-task-id="${taskId}"]`);
+  const input = item.querySelector('.task-note-input');
+  input.classList.toggle('show');
+  if (input.classList.contains('show')) input.focus();
+}
+
+function saveNote(taskId, value) {
+  const data = loadData();
+  const todayTasks = data.tasks[getTodayStr()];
+  for (const cat in todayTasks) {
+    const task = todayTasks[cat].find(t => t.id === taskId);
+    if (task) { task.userNote = value; saveData(data); renderCategories(); return; }
+  }
+}
+
+function deleteTask(taskId, catKey) {
+  const data = loadData();
+  data.tasks[getTodayStr()][catKey] = data.tasks[getTodayStr()][catKey].filter(t => t.id !== taskId);
+  saveData(data);
+  renderCategories();
+  renderHeader();
+  showToast('已删除');
+}
+
+function showAddTaskForm(btn, catKey) {
+  btn.style.display = 'none';
+  btn.nextElementSibling.classList.add('show');
+  btn.nextElementSibling.querySelector('input').focus();
+}
+
+function showAddTaskForm(btn, catKey) {
+  btn.style.display = 'none';
+  btn.nextElementSibling.classList.add('show');
+  btn.nextElementSibling.querySelector('input').focus();
+}
+
+function cancelAddTask(btn) {
+  const form = btn.parentElement.parentElement;
+  form.classList.remove('show');
+  form.querySelector('input').value = '';
+  form.previousElementSibling.style.display = 'flex';
+}
+
+function addTaskInline(input, catKey) {
+  const name = input.value.trim();
+  if (!name) return;
+  const data = loadData();
+  const todayStr = getTodayStr();
+  if (!data.tasks[todayStr]) getDayTasks(todayStr);
+  data.tasks[todayStr][catKey].push({
+    id: catKey + '_custom_' + Date.now() + '_' + todayStr,
+    name: name, done: false, note: '', userNote: '', fixed: false
+  });
+  saveData(data);
+  renderCategories();
+  renderHeader();
+  showToast('已添加');
+}
+
+// ===== 日报/周报 =====
+function renderReport() {
+  const data = loadData();
+  const todayStr = getTodayStr();
+  const today = new Date();
+  document.getElementById('reportDate').textContent = (today.getMonth()+1) + '月' + today.getDate() + '日 ' + ['周日','周一','周二','周三','周四','周五','周六'][today.getDay()];
+
+  const todayReport = data.dailyReports[todayStr] || {};
+  document.getElementById('dailyDone').value = todayReport.done || '';
+  document.getElementById('dailyLearn').value = todayReport.learn || '';
+  document.getElementById('dailyEfficiency').value = todayReport.efficiency || '';
+  document.getElementById('dailyReading').value = todayReport.reading || '';
+  document.getElementById('dailyPlan').value = todayReport.plan || '';
+  document.getElementById('dailyReflect').value = todayReport.reflect || '';
+
+  document.getElementById('weekReportDate').textContent = '第' + getWeekNumber(todayStr) + '周';
+
+  renderDailyHistory();
+  renderWeeklySummary();
+
+  const weekKey = getWeekKey(todayStr);
+  const weekReport = data.weeklyReports[weekKey] || {};
+  document.getElementById('weeklyAchievement').value = weekReport.achievement || '';
+  document.getElementById('weeklyProject').value = weekReport.project || '';
+  document.getElementById('weeklyPlan').value = weekReport.plan || '';
+}
+
+function renderDailyHistory() {
+  const data = loadData();
+  const container = document.getElementById('dailyHistory');
+  container.innerHTML = '';
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dayOfWeek + 1);
+  const dayLabels = ['一','二','三','四','五','六','日'];
+  let hasReport = false;
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const report = data.dailyReports[dStr];
+    if (report && (report.done || report.learn || report.efficiency || report.reading || report.plan || report.reflect)) {
+      hasReport = true;
+      const dayTasks = data.tasks[dStr];
+      let total = 0, done = 0;
+      if (dayTasks) {
+        for (const cat in dayTasks) {
+          dayTasks[cat].forEach(t => { total++; if (t.done) done++; });
+        }
+      }
+      const dDisplay = (d.getMonth()+1) + '/' + d.getDate() + ' 周' + dayLabels[i];
+      const div = document.createElement('div');
+      div.className = 'report-history-item';
+      let content = '';
+      if (report.done) content += '📌 完成：' + report.done + '\n';
+      if (report.learn) content += '💡 学习：' + report.learn + '\n';
+      if (report.efficiency) content += '🔥 提效：' + report.efficiency + '\n';
+      if (report.reading) content += '📖 读书：' + report.reading + '\n';
+      if (report.plan) content += '📋 明日：' + report.plan + '\n';
+      if (report.reflect) content += '🤔 反思：' + report.reflect;
+      div.innerHTML = `
+        <div class="rhi-date">${dDisplay}</div>
+        <div class="rhi-content">${content.trim()}</div>
+        <div class="rhi-stats">
+          <span>任务完成：<strong>${done}/${total}</strong></span>
+          <span>完成率：<strong>${total > 0 ? Math.round(done/total*100) : 0}%</strong></span>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+  }
+  if (!hasReport) {
+    container.innerHTML = '<div class="empty-state">本周还没有日报记录<br>在上方填写今日日报即可自动保存</div>';
+  }
+}
+
+function renderWeeklySummary() {
+  const data = loadData();
+  const container = document.getElementById('weeklySummary');
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dayOfWeek + 1);
+
+  let weekTotal = 0, weekDone = 0, reportCount = 0;
+  const catStats = {};
+  for (const cat in CATEGORIES) catStats[cat] = { t: 0, d: 0 };
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const dayTasks = data.tasks[dStr];
+    if (dayTasks) {
+      for (const cat in dayTasks) {
+        dayTasks[cat].forEach(t => {
+          weekTotal++;
+          if (catStats[cat]) catStats[cat].t++;
+          if (t.done) { weekDone++; if (catStats[cat]) catStats[cat].d++; }
+        });
+      }
+    }
+    const r = data.dailyReports[dStr];
+    if (r && (r.done || r.learn)) reportCount++;
+  }
+
+  const weekRate = weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0;
+  const weekNum = getWeekNumber(getTodayStr());
+
+  let catRows = '';
+  for (const cat in CATEGORIES) {
+    catRows += `<div class="ws-row"><span class="ws-label">${CATEGORIES[cat].icon} ${CATEGORIES[cat].name}完成</span><span class="ws-value">${catStats[cat].d} / ${catStats[cat].t}</span></div>`;
+  }
+
+  container.innerHTML = `
+    <div class="ws-row"><span class="ws-label">📅 第 ${weekNum} 周</span><span class="ws-value">${weekRate}% 完成率</span></div>
+    <div class="ws-row"><span class="ws-label">✅ 任务完成</span><span class="ws-value">${weekDone} / ${weekTotal}</span></div>
+    ${catRows}
+    <div class="ws-row"><span class="ws-label">📝 日报填写</span><span class="ws-value">${reportCount} / 7 天</span></div>
+    <div class="ws-row"><span class="ws-label">🔥 连续打卡</span><span class="ws-value">${data.streak || 0} 天</span></div>
+  `;
+}
+
+function saveDailyReport() {
+  const data = loadData();
+  const todayStr = getTodayStr();
+  data.dailyReports[todayStr] = {
+    done: document.getElementById('dailyDone').value,
+    learn: document.getElementById('dailyLearn').value,
+    efficiency: document.getElementById('dailyEfficiency').value,
+    reading: document.getElementById('dailyReading').value,
+    plan: document.getElementById('dailyPlan').value,
+    reflect: document.getElementById('dailyReflect').value
+  };
+  saveData(data);
+  const saved = document.getElementById('dailySaved');
+  saved.classList.add('show');
+  setTimeout(() => saved.classList.remove('show'), 2000);
+  renderDailyHistory();
+}
+
+function saveWeeklyReport() {
+  const data = loadData();
+  const weekKey = getWeekKey(getTodayStr());
+  data.weeklyReports[weekKey] = {
+    achievement: document.getElementById('weeklyAchievement').value,
+    project: document.getElementById('weeklyProject').value,
+    plan: document.getElementById('weeklyPlan').value
+  };
+  saveData(data);
+  const saved = document.getElementById('weeklySaved');
+  saved.classList.add('show');
+  setTimeout(() => saved.classList.remove('show'), 2000);
+}
+
+// ===== 统计 =====
+function renderStats() {
+  const data = loadData();
+  document.getElementById('streakDays').textContent = data.streak || 0;
+
+  let weekTotal = 0, weekDone = 0;
+  const dayLabels = ['一','二','三','四','五','六','日'];
+  const weeklyBars = document.getElementById('weeklyBars');
+  weeklyBars.innerHTML = '';
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dayOfWeek + 1);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const dayTasks = data.tasks[dStr];
+    let dTotal = 0, dDone = 0;
+    if (dayTasks) {
+      for (const cat in dayTasks) {
+        dayTasks[cat].forEach(t => { dTotal++; if (t.done) dDone++; });
+      }
+    }
+    const dPct = dTotal > 0 ? Math.round(dDone / dTotal * 100) : 0;
+    weekTotal += dTotal; weekDone += dDone;
+    const isToday = dStr === getTodayStr();
+    const bar = document.createElement('div');
+    bar.className = 'weekly-bar-item' + (isToday ? ' today' : '');
+    bar.innerHTML = `
+      <div class="weekly-bar ${isToday ? 'today' : ''}" style="height:100%;">
+        <div class="bar-fill" style="height:${dPct}%;"></div>
+      </div>
+      <div class="day-label">${dayLabels[i]}</div>
+    `;
+    weeklyBars.appendChild(bar);
+  }
+
+  document.getElementById('weekRate').textContent = (weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0) + '%';
+
+  const catStats = document.getElementById('catStats');
+  catStats.innerHTML = '';
+  const todayTasks = getDayTasks(getTodayStr());
+  for (const catKey in CATEGORIES) {
+    const cat = CATEGORIES[catKey];
+    const tasks = todayTasks[catKey] || [];
+    const done = tasks.filter(t => t.done).length;
+    const pct = tasks.length > 0 ? Math.round(done / tasks.length * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'cat-stat-row';
+    row.innerHTML = `
+      <div class="cat-icon-sm" style="background:${cat.bg};">${cat.icon}</div>
+      <div class="cat-info">
+        <div class="name">${cat.name} (${done}/${tasks.length})</div>
+        <div class="bar"><div class="fill" style="width:${pct}%;background:${cat.color};"></div></div>
+      </div>
+      <div class="pct" style="color:${cat.color};">${pct}%</div>
+    `;
+    catStats.appendChild(row);
+  }
+
+  const weekNum = getWeekNumber(getTodayStr());
+  document.getElementById('overallProgress').style.width = Math.min(100, Math.round(weekNum / TOTAL_WEEKS * 100)) + '%';
+  document.getElementById('currentWeek').textContent = weekNum;
+  const phaseRanges = {
+    1:'8/17-9/13',2:'8/17-9/13',3:'8/17-9/13',4:'8/17-9/13',
+    5:'9/14-10/11',6:'9/14-10/11',7:'9/14-10/11',8:'9/14-10/11',
+    9:'10/12-11/8',10:'10/12-11/8',11:'10/12-11/8',12:'10/12-11/8',
+    13:'11/9-12/5',14:'11/9-12/5',15:'11/9-12/5',16:'11/9-12/5'
+  };
+  document.getElementById('weekRange').textContent = phaseRanges[weekNum] || '';
+
+  renderTotalStats();
+}
+
+function renderTotalStats() {
+  const data = loadData();
+  const container = document.getElementById('totalStats');
+  let totalTasks = 0, doneTasks = 0, totalReports = 0, efficiencyCount = 0, readingDays = 0;
+  const catTotals = {};
+  for (const cat in CATEGORIES) catTotals[cat] = { t: 0, d: 0 };
+
+  for (const dateStr in data.tasks) {
+    for (const cat in data.tasks[dateStr]) {
+      data.tasks[dateStr][cat].forEach(t => {
+        totalTasks++;
+        if (catTotals[cat]) catTotals[cat].t++;
+        if (t.done) { doneTasks++; if (catTotals[cat]) catTotals[cat].d++; }
+      });
+    }
+  }
+  for (const dateStr in data.dailyReports) {
+    const r = data.dailyReports[dateStr];
+    if (r.done || r.learn) totalReports++;
+    if (r.efficiency && r.efficiency.trim()) efficiencyCount++;
+    if (r.reading && r.reading.trim()) readingDays++;
+  }
+
+  let catRows = '';
+  for (const cat in CATEGORIES) {
+    catRows += `<div class="ws-row"><span class="ws-label">${CATEGORIES[cat].icon} 累计${CATEGORIES[cat].name}完成</span><span class="ws-value">${catTotals[cat].d} / ${catTotals[cat].t}</span></div>`;
+  }
+
+  container.innerHTML = `
+    <div class="weekly-summary">
+      <div class="ws-row"><span class="ws-label">📋 累计任务完成</span><span class="ws-value">${doneTasks} / ${totalTasks}</span></div>
+      ${catRows}
+      <div class="ws-row"><span class="ws-label">📝 累计日报填写</span><span class="ws-value">${totalReports} 天</span></div>
+      <div class="ws-row"><span class="ws-label">🔥 工作提效记录</span><span class="ws-value">${efficiencyCount} 条</span></div>
+      <div class="ws-row"><span class="ws-label">📖 读书记录天数</span><span class="ws-value">${readingDays} 天</span></div>
+      <div class="ws-row"><span class="ws-label">🏆 最高连续打卡</span><span class="ws-value">${data.streak || 0} 天</span></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-faint);margin-top:8px;">💡 这些数据可在转正答辩/跳槽面试时作为工作量证明</div>
+  `;
+}
+
+// ===== 记账 =====
+function renderFinance() {
+  const data = loadData();
+  const assets = data.finance.assets;
+
+  const wEl = document.getElementById('assetWechat');
+  const aEl = document.getElementById('assetAlipay');
+  const bEl = document.getElementById('assetBank');
+  if (document.activeElement !== wEl) wEl.value = assets.wechat || '';
+  if (document.activeElement !== aEl) aEl.value = assets.alipay || '';
+  if (document.activeElement !== bEl) bEl.value = assets.bank || '';
+
+  const wechat = parseFloat(assets.wechat) || 0;
+  const alipay = parseFloat(assets.alipay) || 0;
+  const bank = parseFloat(assets.bank) || 0;
+  const total = wechat + alipay + bank;
+
+  document.getElementById('totalAsset').textContent = '¥' + total.toLocaleString();
+  document.getElementById('donutCenter').textContent = total > 0 ? (total >= 10000 ? '¥' + (total/10000).toFixed(1) + '万' : '¥' + total.toLocaleString()) : '¥0';
+
+  const donut = document.getElementById('assetDonut');
+  if (total > 0) {
+    const p1 = wechat / total * 100;
+    const p2 = alipay / total * 100;
+    donut.style.background = `conic-gradient(#6c8eef 0% ${p1}%, #f472b6 ${p1}% ${p1+p2}%, #4ade80 ${p1+p2}% 100%)`;
+  } else {
+    donut.style.background = 'var(--surface3)';
+  }
+
+  renderMonthChart();
+  renderMonthList();
+}
+
+function renderMonthChart() {
+  const data = loadData();
+  const monthly = [...data.finance.monthly].sort((a, b) => a.month.localeCompare(b.month));
+  const wrap = document.getElementById('monthChartWrap');
+  const summary = document.getElementById('financeSummary');
+
+  if (monthly.length === 0) {
+    wrap.innerHTML = '<div class="empty-state">还没有月度收支记录<br>点下方按钮添加第一条</div>';
+    summary.innerHTML = '';
+    return;
+  }
+
+  const maxVal = Math.max(...monthly.map(m => Math.max(m.income, m.expense)), 1);
+
+  let chartHtml = '<div class="month-chart">';
+  monthly.forEach(m => {
+    const ih = Math.round(m.income / maxVal * 100);
+    const eh = Math.round(m.expense / maxVal * 100);
+    const label = m.month.slice(2).replace('-', '/');
+    chartHtml += `
+      <div class="month-group">
+        <div class="month-bars">
+          <div class="m-bar income" style="height:${ih}%;"><span class="m-val">${m.income >= 10000 ? (m.income/10000).toFixed(1)+'w' : m.income}</span></div>
+          <div class="m-bar expense" style="height:${eh}%;"><span class="m-val">${m.expense >= 10000 ? (m.expense/10000).toFixed(1)+'w' : m.expense}</span></div>
+        </div>
+        <div class="m-label">${label}</div>
+      </div>
+    `;
+  });
+  chartHtml += '</div>';
+  wrap.innerHTML = chartHtml;
+
+  const totalIncome = monthly.reduce((s, m) => s + m.income, 0);
+  const totalExpense = monthly.reduce((s, m) => s + m.expense, 0);
+  const totalSave = totalIncome - totalExpense;
+  const avgSave = Math.round(totalSave / monthly.length);
+  const fmt = v => v >= 10000 ? (v/10000).toFixed(1) + 'w' : String(v);
+  summary.innerHTML = `
+    <div class="fs-cell"><div class="fs-val" style="color:var(--green);">¥${fmt(totalIncome)}</div><div class="fs-label">累计收入</div></div>
+    <div class="fs-cell"><div class="fs-val" style="color:var(--pink);">¥${fmt(totalExpense)}</div><div class="fs-label">累计支出</div></div>
+    <div class="fs-cell"><div class="fs-val" style="color:var(--cyan);">¥${fmt(avgSave)}</div><div class="fs-label">月均可存</div></div>
+  `;
+}
+
+function renderMonthList() {
+  const data = loadData();
+  const monthly = [...data.finance.monthly].sort((a, b) => b.month.localeCompare(a.month));
+  const container = document.getElementById('monthList');
+  if (monthly.length === 0) {
+    container.innerHTML = '<div class="empty-state">暂无记录</div>';
+    return;
+  }
+  container.innerHTML = '';
+  monthly.forEach(m => {
+    const idx = data.finance.monthly.findIndex(x => x.month === m.month);
+    const save = m.income - m.expense;
+    const div = document.createElement('div');
+    div.className = 'month-list-item';
+    div.innerHTML = `
+      <span class="ml-month">${m.month}</span>
+      <div class="ml-detail">
+        <span>收 <strong style="color:var(--green);">${m.income}</strong></span>
+        <span>支 <strong style="color:var(--pink);">${m.expense}</strong></span>
+        <span>存 <strong style="color:var(--cyan);">${save}</strong></span>
+      </div>
+      <span class="ml-del" onclick="deleteMonthRecord(${idx})">✕</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function saveAssets() {
+  const data = loadData();
+  data.finance.assets = {
+    wechat: document.getElementById('assetWechat').value,
+    alipay: document.getElementById('assetAlipay').value,
+    bank: document.getElementById('assetBank').value
+  };
+  saveData(data);
+  renderFinance();
+}
+
+function addMonthRecord() {
+  const month = document.getElementById('newMonthVal').value;
+  const income = parseFloat(document.getElementById('newMonthIncome').value) || 0;
+  const expense = parseFloat(document.getElementById('newMonthExpense').value) || 0;
+  if (!month) { showToast('请选择月份'); return; }
+
+  const data = loadData();
+  const existIdx = data.finance.monthly.findIndex(m => m.month === month);
+  if (existIdx >= 0) {
+    data.finance.monthly[existIdx] = { month, income, expense };
+  } else {
+    data.finance.monthly.push({ month, income, expense });
+  }
+  saveData(data);
+  renderFinance();
+  closeModal('addMonthModal');
+  showToast('已保存');
+  document.getElementById('newMonthIncome').value = '';
+  document.getElementById('newMonthExpense').value = '';
+}
+
+function deleteMonthRecord(idx) {
+  const data = loadData();
+  data.finance.monthly.splice(idx, 1);
+  saveData(data);
+  renderFinance();
+  showToast('已删除');
+}
+
+// ===== 求职 =====
+function renderJob() {
+  const data = loadData();
+  const projectsContainer = document.getElementById('projectsContainer');
+  projectsContainer.innerHTML = '';
+  data.projects.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'job-project';
+    div.innerHTML = `
+      <div class="job-project-header">
+        <span class="jp-name">${p.name}</span>
+        <span class="jp-pct" style="color:${p.color};">${p.progress}%</span>
+      </div>
+      <div class="bar"><div class="fill" style="width:${p.progress}%;background:${p.color};"></div></div>
+      <div class="jp-desc">${p.desc}</div>
+      <div style="margin-top:8px;">
+        <input type="range" min="0" max="100" value="${p.progress}" style="width:100%;accent-color:${p.color};"
+          onchange="updateProjectProgress(${i}, this.value)">
+      </div>
+    `;
+    projectsContainer.appendChild(div);
+  });
+
+  const appContainer = document.getElementById('applicationsContainer');
+  if (data.applications.length === 0) {
+    appContainer.innerHTML = '<div class="empty-state">还没有投递记录<br>点下方按钮添加</div>';
+  } else {
+    appContainer.innerHTML = '';
+    const statusMap = {
+      pending:{label:'已投递',cls:'pending'}, interview:{label:'面试中',cls:'interview'},
+      offer:{label:'已Offer',cls:'offer'}, rejected:{label:'已拒绝',cls:'rejected'}
+    };
+    data.applications.forEach((app, i) => {
+      const st = statusMap[app.status] || statusMap.pending;
+      const div = document.createElement('div');
+      div.className = 'job-app-item';
+      div.innerHTML = `
+        <div class="ja-left">
+          <div class="ja-company">${app.company}</div>
+          <div class="ja-role">${app.role}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="ja-status ${st.cls}">${st.label}</span>
+          <span class="task-action-btn" onclick="deleteApplication(${i})" style="color:var(--red);">✕</span>
+        </div>
+      `;
+      appContainer.appendChild(div);
+    });
+  }
+
+  const timeline = document.getElementById('decisionTimeline');
+  timeline.innerHTML = '';
+  const weekNum = getWeekNumber(getTodayStr());
+  const phaseWeeks = [[1,4],[5,8],[9,12],[13,16]];
+  DECISIONS.forEach((d, i) => {
+    let status = 'pending';
+    const [start, end] = phaseWeeks[i];
+    if (weekNum > end) status = 'done';
+    else if (weekNum >= start && weekNum <= end) status = 'current';
+    const div = document.createElement('div');
+    div.className = 'decision-item';
+    div.innerHTML = `
+      <div class="decision-dot ${status}"></div>
+      <div class="decision-content">
+        <div class="dc-time">${d.time}</div>
+        <div class="dc-title">${d.title}</div>
+        <div class="dc-desc">${d.desc}</div>
+      </div>
+    `;
+    timeline.appendChild(div);
+  });
+}
+
+function updateProjectProgress(index, value) {
+  const data = loadData();
+  data.projects[index].progress = parseInt(value);
+  saveData(data);
+  renderJob();
+}
+
+function deleteApplication(index) {
+  const data = loadData();
+  data.applications.splice(index, 1);
+  saveData(data);
+  renderJob();
+  showToast('已删除');
+}
+
+// ===== 弹窗 =====
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function addTaskFromModal() {
+  const name = document.getElementById('newTaskName').value.trim();
+  const cat = document.getElementById('newTaskCategory').value;
+  const note = document.getElementById('newTaskNote').value.trim();
+  if (!name) { showToast('请输入任务名称'); return; }
+  const data = loadData();
+  const todayStr = getTodayStr();
+  if (!data.tasks[todayStr]) getDayTasks(todayStr);
+  data.tasks[todayStr][cat].push({
+    id: cat + '_custom_' + Date.now() + '_' + todayStr,
+    name: name, done: false, note: note, userNote: '', fixed: false
+  });
+  saveData(data);
+  renderCategories();
+  renderHeader();
+  closeModal('addTaskModal');
+  showToast('已添加');
+  document.getElementById('newTaskName').value = '';
+  document.getElementById('newTaskNote').value = '';
+}
+
+function addApplicationFromModal() {
+  const company = document.getElementById('newAppCompany').value.trim();
+  const role = document.getElementById('newAppRole').value.trim();
+  const status = document.getElementById('newAppStatus').value;
+  if (!company) { showToast('请输入公司名称'); return; }
+  const data = loadData();
+  data.applications.unshift({ company, role, status });
+  saveData(data);
+  renderJob();
+  closeModal('addAppModal');
+  showToast('已添加');
+  document.getElementById('newAppCompany').value = '';
+  document.getElementById('newAppRole').value = '';
+}
+
+// ===== Tab 切换 =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab[data-tab="'+tabName+'"]').forEach(t => t.classList.add('active'));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+  const navItem = document.querySelector('.nav-item[data-tab="'+tabName+'"]');
+  if (navItem) navItem.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+
+  const fab = document.getElementById('fabBtn');
+  if (tabName === 'stats') { renderStats(); fab.style.display = 'none'; }
+  else if (tabName === 'job') { renderJob(); fab.style.display = 'flex'; }
+  else if (tabName === 'report') { renderReport(); fab.style.display = 'none'; }
+  else if (tabName === 'finance') { renderFinance(); fab.style.display = 'flex'; }
+  else if (tabName === 'news') { fab.style.display = 'none'; }
+  else { fab.style.display = 'flex'; }
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ===== 事件绑定 =====
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchTab(item.dataset.tab));
+});
+
+document.getElementById('fabBtn').addEventListener('click', () => {
+  const activeTab = document.querySelector('.tab-content.active').id;
+  if (activeTab === 'tab-job') openModal('addAppModal');
+  else if (activeTab === 'tab-finance') openModal('addMonthModal');
+  else openModal('addTaskModal');
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+// ===== 密码锁 =====
+const LOCK_KEY = 'workbench_lock';
+
+function hashPassword(pwd) {
+  let hash = 0;
+  for (let i = 0; i < pwd.length; i++) {
+    hash = ((hash << 5) - hash) + pwd.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return 'h' + Math.abs(hash);
+}
+
+function initLock() {
+  const saved = localStorage.getItem(LOCK_KEY);
+  const lockScreen = document.getElementById('lockScreen');
+  const title = document.getElementById('lockTitle');
+  const desc = document.getElementById('lockDesc');
+  const hint = document.getElementById('lockHint');
+  const input = document.getElementById('lockPassword');
+  const btn = document.getElementById('lockBtn');
+
+  if (!saved) {
+    title.textContent = '首次使用，请设置密码';
+    desc.textContent = '设置后，以后打开需输入此密码';
+    btn.textContent = '设置密码并进入';
+    hint.textContent = '密码建议用你能记住的组合';
+    lockScreen.classList.remove('hidden');
+    input.focus();
+  } else {
+    title.textContent = '请输入访问密码';
+    desc.textContent = '个人工作台 · 请验证身份';
+    btn.textContent = '进入工作台';
+    hint.textContent = '';
+    lockScreen.classList.remove('hidden');
+    input.focus();
+  }
+}
+
+function checkLock() {
+  const input = document.getElementById('lockPassword');
+  const pwd = input.value.trim();
+  const error = document.getElementById('lockError');
+  const saved = localStorage.getItem(LOCK_KEY);
+
+  if (!pwd) { error.textContent = '请输入密码'; return; }
+
+  if (!saved) {
+    localStorage.setItem(LOCK_KEY, hashPassword(pwd));
+    error.textContent = '✅ 密码已设置';
+    unlockApp();
+  } else {
+    if (hashPassword(pwd) === saved) {
+      error.textContent = '';
+      unlockApp();
+    } else {
+      error.textContent = '❌ 密码错误，请重试';
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+function unlockApp() {
+  document.getElementById('lockScreen').classList.add('hidden');
+  renderHeader();
+  renderCategories();
+  getDayTasks(getTodayStr());
+}
+
+// ===== 初始化 =====
+initLock();
+</script>
+
+</body>
+</html>
